@@ -45,11 +45,11 @@ function show5() {
 //
 var app = new Framework7({
     // App root element
-    root: '#appVisualizadorE',
+    root: '#appVisualizadorE2',
     // App Name
-    name: 'visualizadorE',
+    name: 'appVisualizadorE2',
     // App id
-    id: 'com.visualizadorE',
+    id: 'com.appVisualizadorE2',
     // Enable swipe panel
     panel: {
         swipe: 'left'
@@ -86,10 +86,16 @@ document.addEventListener('deviceready', function () {
             //
             localStorage.ipServidor = ip;
             urlServer = 'http://' + ip + '/visualizadorE2Php/';
+            fechaHora();
+            cargarCodigoAzules();
+            cargarLlamados();
         });
     } else {
         //
         urlServer = 'http://' + localStorage.ipServidor + '/visualizadorE2Php/';
+        fechaHora();
+        cargarCodigoAzules();
+        cargarLlamados();
     }
     //
     if (localStorage.codigosAzules !== undefined) {
@@ -109,19 +115,20 @@ document.addEventListener('deviceready', function () {
     document.getElementById("fecha").style.fontSize = '3.5vh';
     document.getElementById("hora").style.fontSize = '3.5vh';
     //
-    fecha();
-    //
-    setInterval(function () {
-        //
-        fecha();
-    }, 1000);
-    //
     let arrayP = [
-        {h: 'Habitacion 1', cb: 'Cama 1', s: 1, ca: 0},
+        {h: 'Habitacion 1', cb: 'Baño 1', s: 1, ca: 0},
         {h: 'Habitacion 2', cb: 'Cama 2', s: 1, ca: 0},
         {h: 'Cod. Azul', cb: 'Quirofano 1', s: 1, ca: 101},
         {h: 'Habitacion 1', cb: 'Cama 3', s: 1, ca: 0},
-        {h: 'Habitacion 1', cb: 'Cama 1', s: 0, ca: 0}
+        {h: 'Habitacion 1', cb: 'Baño 1', s: 0, ca: 0}
+    ];
+    //
+    let arrayP2 = [
+        {h: 1, cb: 21, s: 1},
+        {h: 2, cb: 2, s: 1},
+        {h: 101, cb: 0, s: 1},
+        {h: 1, cb: 22, s: 1},
+        {h: 1, cb: 21, s: 0}
     ];
     //
     let controlP = 0;
@@ -134,6 +141,7 @@ document.addEventListener('deviceready', function () {
         }
         //
         actualizarArrayTurnos(arrayP[controlP]['h'], arrayP[controlP]['cb'], arrayP[controlP]['s'], arrayP[controlP]['ca']);
+        guardarLlamadoR(arrayP2[controlP]['h'], arrayP2[controlP]['cb'], arrayP2[controlP]['s']);
         //
         controlP++;
     }, 10000);
@@ -141,11 +149,11 @@ document.addEventListener('deviceready', function () {
 //    cordova.plugins.CordovaMqTTPlugin.connect({
 //        url: 'tcp://165.227.89.32', //a public broker used for testing purposes only. Try using a self hosted broker for production.
 //        port: '1883',
-//        clientId: 'com.visualizadorE',
+//        clientId: 'com.appVisualizadorE2',
 //        willTopicConfig: {
 //            qos: 0, //default is 0
 //            retain: false, //default is true
-//            topic: "appLlamadoEnf/prueba",
+//            topic: "appVisualizadorE2/prueba",
 //            payload: ""
 //        },
 //        username: "fabian",
@@ -165,6 +173,25 @@ document.addEventListener('deviceready', function () {
     actualizarArrayCiclico();
 });
 
+function fechaHora() {
+    //
+    setInterval(function () {
+        //
+        app.request.post(urlServer + 'read/fechaHora', {},
+                function (rsp) {
+                    //
+                    var data = JSON.parse(rsp);
+                    //
+                    $$('#fecha').html(data.fecha);
+                    $$('#hora').html(data.hora);
+                    $$('#fecha').css('font-weight', 'bold');
+                    $$('#hora').css('font-weight', 'bold');
+                    $$('#fecha').css('color', '#5B5B5A');
+                    $$('#hora').css('color', '#5B5B5A');
+                });
+    }, 5000);
+}
+
 //
 function editarIpServidor() {
     //
@@ -172,29 +199,9 @@ function editarIpServidor() {
         //
         localStorage.ipServidor = ip;
         urlServer = 'http://' + ip + '/visualizadorE2Php/';
+        cargarCodigoAzules();
+        cargarLlamados();
     });
-}
-
-//
-function fecha() {
-    //
-    var dias = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
-    var meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    var fecha = new Date();
-    var diaS = fecha.getDay();
-    var diaM = fecha.getDate();
-    var mes = fecha.getMonth();
-    var year = fecha.getFullYear();
-    //
-    if (year == '2020') {
-        //
-        $$('#fecha').html(dias[diaS] + ' ' + diaM + '/' + meses[mes] + '/' + year);
-        $$('#hora').html(reloj);
-        $$('#fecha').css('font-weight', 'bold');
-        $$('#hora').css('font-weight', 'bold');
-        $$('#fecha').css('color', '#5B5B5A');
-        $$('#hora').css('color', '#5B5B5A');
-    }
 }
 
 //
@@ -620,6 +627,7 @@ function llamado() {
                                 cb = 'Cama ' + int2;
                             }
                             //
+                            guardarLlamadoR(int, int2, s);
                             actualizarArrayTurnos(h, cb, s, int);
                         }
                     }
@@ -632,11 +640,11 @@ function llamado() {
 function subscribirse() {
     //
     cordova.plugins.CordovaMqTTPlugin.subscribe({
-        topic: 'appLlamadoEnf/prueba',
+        topic: 'appVisualizadorE2/prueba',
         qos: 0,
         success: function (s) {
             //
-            cordova.plugins.CordovaMqTTPlugin.listen("appLlamadoEnf/prueba", function (payload, params) {
+            cordova.plugins.CordovaMqTTPlugin.listen("appVisualizadorE2/prueba", function (payload, params) {
                 //
                 if (payload !== '' && payload !== null && payload !== undefined) {
                     //
@@ -657,99 +665,45 @@ function subscribirse() {
 var arrayCodigosAzules = [];
 
 //
-function guardarCodigoAzul() {
-    //
-    if ($$('#descripcion').val() !== '' && $$('#descripcion').val() !== ' ' && $$('#descripcion').val() !== null) {
-        //
-        if (arrayCodigosAzules.length > 0) {
-            //
-            var cant = arrayCodigosAzules.length;
-            //
-            arrayCodigosAzules[cant] = {codigo: 101 + cant, descripcion: $$('#descripcion').val()};
-            //
-            localStorage.codigosAzules = JSON.stringify(arrayCodigosAzules);
-        } else {
-            //
-            arrayCodigosAzules[0] = {codigo: 101, descripcion: $$('#descripcion').val()};
-            //
-            localStorage.codigosAzules = JSON.stringify(arrayCodigosAzules);
-        }
-        //
-        cargarTablaCodigosAzules();
-        //
-        var toastBottom = app.toast.create({
-            text: 'Codigo azul guardado!',
-            closeTimeout: 2000
-        });
-        //
-        toastBottom.open();
-    } else {
-        //
-        var toastBottom = app.toast.create({
-            text: 'Llena el campo!',
-            closeTimeout: 2000
-        });
-        //
-        toastBottom.open();
-        //
-        $$('#descripcion').focus();
-    }
-
-}
-
-//
-function cargarTablaCodigosAzules() {
-    //
-    if (localStorage.codigosAzules !== undefined) {
-        //
-        arrayCodigosAzules = JSON.parse(localStorage.codigosAzules);
-        //
-        var campos = '';
-        //
-        for (var i = 0; i < arrayCodigosAzules.length; i++) {
-            //
-            campos += '<tr><td class="numeric-cell">' + arrayCodigosAzules[i]['codigo'] + '</td>';
-            campos += '<td class="label-cell"><input style="width: 100%; border-bottom: 1px solid #E0E0E0;" type="text" id="descripcion' + i + '" name="descripcion" value="' + arrayCodigosAzules[i]['descripcion'] + '" placeholder="Descripción Código"></td>';
-            campos += '<td class="label-cell"><a onclick="editarCodigoAzul(' + i + ')" type="submit" class="button button-fill" href="#"><i class="fas fa-save"></i></a></td></tr>';
-        }
-        //
-        $$('#tablaCodigosAzules').html(campos);
-    }
-}
-
-//
-function editarCodigoAzul(valor) {
-    //
-    if ($$('#descripcion' + valor).val() !== '' && $$('#descripcion' + valor).val() !== ' ' && $$('#descripcion' + valor).val() !== null) {
-        //
-        arrayCodigosAzules[valor]['descripcion'] = $$('#descripcion' + valor).val();
-        //
-        localStorage.codigosAzules = JSON.stringify(arrayCodigosAzules);
-        //
-        var toastBottom = app.toast.create({
-            text: 'Código azul editado!',
-            closeTimeout: 2000
-        });
-        //
-        toastBottom.open();
-    } else {
-        //
-        var toastBottom = app.toast.create({
-            text: 'No debes dejar el campo vacío!',
-            closeTimeout: 2000
-        });
-        //
-        toastBottom.open();
-        //
-        $$('#descripcion' + valor).focus();
-    }
-}
-
 function guardarLlamado(valor, valor2, valor3, valor4) {
     //
     app.request.post(urlServer + 'Create/guardarLlamado', {habitacion: valor, caba: valor2, estado: valor3, codAzul: valor4},
             function (rsp) {
                 //
                 console.log(rsp);
+            });
+}
+
+//
+function guardarLlamadoR(valor, valor2, valor3) {
+    //
+    app.request.post(urlServer + 'Create/guardarLlamadoR', {habitacion: valor, caba: valor2, estado: valor3},
+            function (rsp) {
+                //
+                console.log(rsp);
+            });
+}
+
+//
+function cargarCodigoAzules() {
+    //
+    app.request.post(urlServer + 'Read/cargarCodigoAzules', {},
+            function (rsp) {
+                //
+                var data = JSON.parse(rsp);
+                //
+                arrayCodigosAzules = data;
+            });
+}
+
+//
+function cargarLlamados() {
+    //
+    app.request.post(urlServer + 'Read/cargarLlamadosV', {},
+            function (rsp) {
+                //
+                var data = JSON.parse(rsp);
+                //
+                arrayT = data;
             });
 }
