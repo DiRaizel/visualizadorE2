@@ -45,11 +45,11 @@ function show5() {
 //
 var app = new Framework7({
     // App root element
-    root: '#appVisualizadorE',
+    root: '#appVisualizadorE2',
     // App Name
-    name: 'visualizadorE',
+    name: 'appVisualizadorE2',
     // App id
-    id: 'com.visualizadorE',
+    id: 'com.appVisualizadorE2',
     // Enable swipe panel
     panel: {
         swipe: 'left'
@@ -71,6 +71,7 @@ var mainView = app.views.create('.view-main');
 
 //
 var arrayT = [];
+var urlServer = '';
 
 //
 document.addEventListener('deviceready', function () {
@@ -78,6 +79,24 @@ document.addEventListener('deviceready', function () {
     show5();
     //
     voz('', 0);
+    //
+    if (localStorage.ipServidor === undefined) {
+        //
+        app.dialog.prompt('', 'Ip Servidor?', function (ip) {
+            //
+            localStorage.ipServidor = ip;
+            urlServer = 'http://' + ip + '/visualizadorE2Php/';
+            fechaHora();
+            cargarCodigoAzules();
+            cargarLlamados();
+        });
+    } else {
+        //
+        urlServer = 'http://' + localStorage.ipServidor + '/visualizadorE2Php/';
+        fechaHora();
+        cargarCodigoAzules();
+        cargarLlamados();
+    }
     //
     if (localStorage.codigosAzules !== undefined) {
         //
@@ -88,75 +107,77 @@ document.addEventListener('deviceready', function () {
     //
     for (var i = 0; i < 5; i++) {
         //
-        document.getElementById("modulo" + i).style.fontSize = '7vh';
-        document.getElementById("cliente" + i).style.fontSize = '7vh';
-        document.getElementById("hora" + i).style.fontSize = '7vh';
+        document.getElementById("modulo" + i).style.fontSize = '6.5vh';
+        document.getElementById("cliente" + i).style.fontSize = '6.5vh';
+        document.getElementById("hora" + i).style.fontSize = '6.5vh';
     }
     //
     document.getElementById("fecha").style.fontSize = '3.5vh';
     document.getElementById("hora").style.fontSize = '3.5vh';
     //
-    fecha();
-    //
-    setInterval(function () {
-        //
-        fecha();
-    }, 1000);
-    //
-    cordova.plugins.CordovaMqTTPlugin.connect({
-        url: 'tcp://165.227.89.32', //a public broker used for testing purposes only. Try using a self hosted broker for production.
-        port: '1883',
-        clientId: 'com.visualizadorE',
-        willTopicConfig: {
-            qos: 0, //default is 0
-            retain: false, //default is true
-            topic: "appLlamadoEnf/prueba",
-            payload: ""
-        },
-        username: "fabian",
-        password: '1234',
-        success: function (s) {
-            subscribirse();
-        },
-        error: function (e) {
-//            console.log('error: ' + e);
-        },
-        onConnectionLost: function (e) {
-//            console.log('conexion perdida: ' + e);
-        }
-    });
+//    cordova.plugins.CordovaMqTTPlugin.connect({
+//        url: 'tcp://165.227.89.32', //a public broker used for testing purposes only. Try using a self hosted broker for production.
+//        port: '1883',
+//        clientId: 'com.appVisualizadorE2',
+//        willTopicConfig: {
+//            qos: 0, //default is 0
+//            retain: false, //default is true
+//            topic: "appVisualizadorE2/prueba",
+//            payload: ""
+//        },
+//        username: "fabian",
+//        password: '1234',
+//        success: function (s) {
+//            subscribirse();
+//        },
+//        error: function (e) {
+////            console.log('error: ' + e);
+//        },
+//        onConnectionLost: function (e) {
+////            console.log('conexion perdida: ' + e);
+//        }
+//    });
     //
     actualizarTurnos();
     actualizarArrayCiclico();
 });
 
-//
-function fecha() {
+function fechaHora() {
     //
-    var dias = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
-    var meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    var fecha = new Date();
-    var diaS = fecha.getDay();
-    var diaM = fecha.getDate();
-    var mes = fecha.getMonth();
-    var year = fecha.getFullYear();
-    //
-    if (year == '2020') {
+    setInterval(function () {
         //
-        $$('#fecha').html(dias[diaS] + ' ' + diaM + '/' + meses[mes] + '/' + year);
-        $$('#hora').html(reloj);
-        $$('#fecha').css('font-weight', 'bold');
-        $$('#hora').css('font-weight', 'bold');
-        $$('#fecha').css('color', '#5B5B5A');
-        $$('#hora').css('color', '#5B5B5A');
-    }
+        app.request.post(urlServer + 'read/fechaHora', {},
+                function (rsp) {
+                    //
+                    var data = JSON.parse(rsp);
+                    //
+                    $$('#fecha').html(data.fecha);
+                    $$('#hora').html(data.hora);
+                    $$('#fecha').css('font-weight', 'bold');
+                    $$('#hora').css('font-weight', 'bold');
+                    $$('#fecha').css('color', '#5B5B5A');
+                    $$('#hora').css('color', '#5B5B5A');
+                });
+    }, 5000);
+}
+
+//
+function editarIpServidor() {
+    //
+    app.dialog.prompt('', 'Ip servidor', function (ip) {
+        //
+        localStorage.ipServidor = ip;
+        urlServer = 'http://' + ip + '/visualizadorE2Php/';
+        cargarCodigoAzules();
+        cargarLlamados();
+    });
 }
 
 //
 var controlCA = false;
 
 //
-function actualizarArrayTurnos(str, str2, str3, str4) {
+function actualizarArrayTurnos(str, str2, str3, str4, str5, str6, str7) {
     //
     if (str4 > 100) {
         //
@@ -174,12 +195,14 @@ function actualizarArrayTurnos(str, str2, str3, str4) {
                     //
                     if (element.codigo === str4) {
                         //
-                        actualizarArrayTurnos('Cod. Azul', element.descripcion, str3, 0);
+                        actualizarArrayTurnos('Cod. Azul', element.descripcion, str3, 0, str5, str6, str4);
                     }
                 });
             }
         }
     } else {
+        //
+        guardarLlamado(str, str2, str3, str4);
         //
         if (str3 === 0) {
             //
@@ -187,10 +210,21 @@ function actualizarArrayTurnos(str, str2, str3, str4) {
                 //
                 if (arrayT[i]['modulo'] === str && arrayT[i]['tipo'] === str2) {
                     //
+                    if (str !== 'Cod. Azul') {
+                        //
+                        guardarLlamadoR(str4, str5, str6);
+                        //
+                    } else if (str === 'Cod. Azul') {
+                        //
+                        guardarLlamadoR(str7, str5, str6);
+                    }
+                    //
                     arrayT.splice(i, 1);
                 }
             }
         } else {
+            //
+            var controlJ = 1;
             //
             if (arrayT.length > 0) {
                 //
@@ -203,6 +237,7 @@ function actualizarArrayTurnos(str, str2, str3, str4) {
                         //
                         j = i;
                         h = arrayT[i]['hora'];
+                        controlJ = 2;
                     }
                 }
                 //
@@ -244,6 +279,15 @@ function actualizarArrayTurnos(str, str2, str3, str4) {
             } else {
                 //
                 arrayT[0] = {modulo: str, tipo: str2, hora: reloj2};
+            }
+            //
+            if (controlJ === 1 && str !== 'Cod. Azul') {
+                //
+                guardarLlamadoR(str4, str5, str6);
+                //
+            } else if (controlJ === 1 && str === 'Cod. Azul') {
+                //
+                guardarLlamadoR(str7, str5, str6);
             }
             //
             var controlColorDiv = false;
@@ -563,17 +607,29 @@ function llamado() {
 
                             }
                             //
-                            if (int2 > 20) {
+                            if (int2 > 20 && int2 < 41) {
                                 //
-                                var b = int2 - 20;
+                                let b = int2 - 20;
                                 //
                                 cb = 'Baño ' + b;
+                                //
+                            } else if (int2 > 40 && int2 < 46) {
+                                //
+                                let b = int2 - 40;
+                                //
+                                cb = 'Baño Hombre ' + b;
+                            } else if (int2 > 45 && int2 < 51) {
+                                //
+                                let b = int2 - 45;
+                                //
+                                cb = 'Baño Mujer ' + b;
                             } else {
                                 //
                                 cb = 'Cama ' + int2;
                             }
                             //
-                            actualizarArrayTurnos(h, cb, s, int);
+//                            guardarLlamadoR(int, int2, s);
+                            actualizarArrayTurnos(h, cb, s, int, int2, s, 0);
                         }
                     }
                 }
@@ -585,18 +641,18 @@ function llamado() {
 function subscribirse() {
     //
     cordova.plugins.CordovaMqTTPlugin.subscribe({
-        topic: 'appLlamadoEnf/prueba',
+        topic: 'appVisualizadorE2/prueba',
         qos: 0,
         success: function (s) {
             //
-            cordova.plugins.CordovaMqTTPlugin.listen("appLlamadoEnf/prueba", function (payload, params) {
+            cordova.plugins.CordovaMqTTPlugin.listen("appVisualizadorE2/prueba", function (payload, params) {
                 //
                 if (payload !== '' && payload !== null && payload !== undefined) {
                     //
                     var arrayPayload = payload.split(';;');
                     var estado = parseInt(arrayPayload[1]);
                     //
-                    actualizarArrayTurnos('Domicilio', arrayPayload[0], estado, 0);
+                    actualizarArrayTurnos('Domicilio', arrayPayload[0], estado, 0, 0, 0, 0);
                 }
             });
         },
@@ -610,91 +666,45 @@ function subscribirse() {
 var arrayCodigosAzules = [];
 
 //
-function guardarCodigoAzul() {
+function guardarLlamado(valor, valor2, valor3, valor4) {
     //
-    if ($$('#descripcion').val() !== '' && $$('#descripcion').val() !== ' ' && $$('#descripcion').val() !== null) {
-        //
-        if (arrayCodigosAzules.length > 0) {
-            //
-            var cant = arrayCodigosAzules.length;
-            //
-            arrayCodigosAzules[cant] = {codigo: 101 + cant, descripcion: $$('#descripcion').val()};
-            //
-            localStorage.codigosAzules = JSON.stringify(arrayCodigosAzules);
-        } else {
-            //
-            arrayCodigosAzules[0] = {codigo: 101, descripcion: $$('#descripcion').val()};
-            //
-            localStorage.codigosAzules = JSON.stringify(arrayCodigosAzules);
-        }
-        //
-        cargarTablaCodigosAzules();
-        //
-        var toastBottom = app.toast.create({
-            text: 'Codigo azul guardado!',
-            closeTimeout: 2000
-        });
-        //
-        toastBottom.open();
-    } else {
-        //
-        var toastBottom = app.toast.create({
-            text: 'Llena el campo!',
-            closeTimeout: 2000
-        });
-        //
-        toastBottom.open();
-        //
-        $$('#descripcion').focus();
-    }
-
+    app.request.post(urlServer + 'Create/guardarLlamado', {habitacion: valor, caba: valor2, estado: valor3, codAzul: valor4},
+            function (rsp) {
+                //
+                console.log(rsp);
+            });
 }
 
 //
-function cargarTablaCodigosAzules() {
+function guardarLlamadoR(valor, valor2, valor3) {
     //
-    if (localStorage.codigosAzules !== undefined) {
-        //
-        arrayCodigosAzules = JSON.parse(localStorage.codigosAzules);
-        //
-        var campos = '';
-        //
-        for (var i = 0; i < arrayCodigosAzules.length; i++) {
-            //
-            campos += '<tr><td class="numeric-cell">' + arrayCodigosAzules[i]['codigo'] + '</td>';
-            campos += '<td class="label-cell"><input style="width: 100%; border-bottom: 1px solid #E0E0E0;" type="text" id="descripcion' + i + '" name="descripcion" value="' + arrayCodigosAzules[i]['descripcion'] + '" placeholder="Descripción Código"></td>';
-            campos += '<td class="label-cell"><a onclick="editarCodigoAzul(' + i + ')" type="submit" class="button button-fill" href="#"><i class="fas fa-save"></i></a></td></tr>';
-        }
-        //
-        $$('#tablaCodigosAzules').html(campos);
-    }
+    app.request.post(urlServer + 'Create/guardarLlamadoR', {habitacion: valor, caba: valor2, estado: valor3},
+            function (rsp) {
+                //
+                console.log(rsp);
+            });
 }
 
 //
-function editarCodigoAzul(valor) {
+function cargarCodigoAzules() {
     //
-    if ($$('#descripcion' + valor).val() !== '' && $$('#descripcion' + valor).val() !== ' ' && $$('#descripcion' + valor).val() !== null) {
-        //
-        arrayCodigosAzules[valor]['descripcion'] = $$('#descripcion' + valor).val();
-        //
-        localStorage.codigosAzules = JSON.stringify(arrayCodigosAzules);
-        //
-        var toastBottom = app.toast.create({
-            text: 'Código azul editado!',
-            closeTimeout: 2000
-        });
-        //
-        toastBottom.open();
-    } else {
-        //
-        var toastBottom = app.toast.create({
-            text: 'No debes dejar el campo vacío!',
-            closeTimeout: 2000
-        });
-        //
-        toastBottom.open();
-        //
-        $$('#descripcion' + valor).focus();
-    }
+    app.request.post(urlServer + 'Read/cargarCodigoAzules', {},
+            function (rsp) {
+                //
+                var data = JSON.parse(rsp);
+                //
+                arrayCodigosAzules = data;
+            });
+}
 
+//
+function cargarLlamados() {
+    //
+    app.request.post(urlServer + 'Read/cargarLlamadosV', {},
+            function (rsp) {
+                //
+                var data = JSON.parse(rsp);
+                //
+                arrayT = data;
+            });
 }

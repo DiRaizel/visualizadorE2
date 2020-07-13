@@ -107,44 +107,13 @@ document.addEventListener('deviceready', function () {
     //
     for (var i = 0; i < 5; i++) {
         //
-        document.getElementById("modulo" + i).style.fontSize = '7vh';
-        document.getElementById("cliente" + i).style.fontSize = '7vh';
-        document.getElementById("hora" + i).style.fontSize = '7vh';
+        document.getElementById("modulo" + i).style.fontSize = '6.5vh';
+        document.getElementById("cliente" + i).style.fontSize = '6.5vh';
+        document.getElementById("hora" + i).style.fontSize = '6.5vh';
     }
     //
     document.getElementById("fecha").style.fontSize = '3.5vh';
     document.getElementById("hora").style.fontSize = '3.5vh';
-    //
-    let arrayP = [
-        {h: 'Habitacion 1', cb: 'Baño 1', s: 1, ca: 0},
-        {h: 'Habitacion 2', cb: 'Cama 2', s: 1, ca: 0},
-        {h: 'Cod. Azul', cb: 'Quirofano 1', s: 1, ca: 101},
-        {h: 'Habitacion 1', cb: 'Cama 3', s: 1, ca: 0},
-        {h: 'Habitacion 1', cb: 'Baño 1', s: 0, ca: 0}
-    ];
-    //
-    let arrayP2 = [
-        {h: 1, cb: 21, s: 1},
-        {h: 2, cb: 2, s: 1},
-        {h: 101, cb: 0, s: 1},
-        {h: 1, cb: 22, s: 1},
-        {h: 1, cb: 21, s: 0}
-    ];
-    //
-    let controlP = 0;
-    //
-    setInterval(function () {
-        //
-        if (controlP === arrayP.length) {
-            //
-            controlP = 0;
-        }
-        //
-        actualizarArrayTurnos(arrayP[controlP]['h'], arrayP[controlP]['cb'], arrayP[controlP]['s'], arrayP[controlP]['ca']);
-        guardarLlamadoR(arrayP2[controlP]['h'], arrayP2[controlP]['cb'], arrayP2[controlP]['s']);
-        //
-        controlP++;
-    }, 10000);
     //
 //    cordova.plugins.CordovaMqTTPlugin.connect({
 //        url: 'tcp://165.227.89.32', //a public broker used for testing purposes only. Try using a self hosted broker for production.
@@ -208,7 +177,7 @@ function editarIpServidor() {
 var controlCA = false;
 
 //
-function actualizarArrayTurnos(str, str2, str3, str4) {
+function actualizarArrayTurnos(str, str2, str3, str4, str5, str6, str7) {
     //
     if (str4 > 100) {
         //
@@ -226,7 +195,7 @@ function actualizarArrayTurnos(str, str2, str3, str4) {
                     //
                     if (element.codigo === str4) {
                         //
-                        actualizarArrayTurnos('Cod. Azul', element.descripcion, str3, 0);
+                        actualizarArrayTurnos('Cod. Azul', element.descripcion, str3, 0, str5, str6, str4);
                     }
                 });
             }
@@ -241,10 +210,21 @@ function actualizarArrayTurnos(str, str2, str3, str4) {
                 //
                 if (arrayT[i]['modulo'] === str && arrayT[i]['tipo'] === str2) {
                     //
+                    if (str !== 'Cod. Azul') {
+                        //
+                        guardarLlamadoR(str4, str5, str6);
+                        //
+                    } else if (str === 'Cod. Azul') {
+                        //
+                        guardarLlamadoR(str7, str5, str6);
+                    }
+                    //
                     arrayT.splice(i, 1);
                 }
             }
         } else {
+            //
+            var controlJ = 1;
             //
             if (arrayT.length > 0) {
                 //
@@ -257,6 +237,7 @@ function actualizarArrayTurnos(str, str2, str3, str4) {
                         //
                         j = i;
                         h = arrayT[i]['hora'];
+                        controlJ = 2;
                     }
                 }
                 //
@@ -298,6 +279,15 @@ function actualizarArrayTurnos(str, str2, str3, str4) {
             } else {
                 //
                 arrayT[0] = {modulo: str, tipo: str2, hora: reloj2};
+            }
+            //
+            if (controlJ === 1 && str !== 'Cod. Azul') {
+                //
+                guardarLlamadoR(str4, str5, str6);
+                //
+            } else if (controlJ === 1 && str === 'Cod. Azul') {
+                //
+                guardarLlamadoR(str7, str5, str6);
             }
             //
             var controlColorDiv = false;
@@ -617,18 +607,29 @@ function llamado() {
 
                             }
                             //
-                            if (int2 > 20) {
+                            if (int2 > 20 && int2 < 41) {
                                 //
-                                var b = int2 - 20;
+                                let b = int2 - 20;
                                 //
                                 cb = 'Baño ' + b;
+                                //
+                            } else if (int2 > 40 && int2 < 46) {
+                                //
+                                let b = int2 - 40;
+                                //
+                                cb = 'Baño Hombre ' + b;
+                            } else if (int2 > 45 && int2 < 51) {
+                                //
+                                let b = int2 - 45;
+                                //
+                                cb = 'Baño Mujer ' + b;
                             } else {
                                 //
                                 cb = 'Cama ' + int2;
                             }
                             //
-                            guardarLlamadoR(int, int2, s);
-                            actualizarArrayTurnos(h, cb, s, int);
+//                            guardarLlamadoR(int, int2, s);
+                            actualizarArrayTurnos(h, cb, s, int, int2, s, 0);
                         }
                     }
                 }
@@ -651,7 +652,7 @@ function subscribirse() {
                     var arrayPayload = payload.split(';;');
                     var estado = parseInt(arrayPayload[1]);
                     //
-                    actualizarArrayTurnos('Domicilio', arrayPayload[0], estado, 0);
+                    actualizarArrayTurnos('Domicilio', arrayPayload[0], estado, 0, 0, 0, 0);
                 }
             });
         },
