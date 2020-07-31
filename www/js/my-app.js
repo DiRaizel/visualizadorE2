@@ -115,49 +115,105 @@ document.addEventListener('deviceready', function () {
     document.getElementById("fecha").style.fontSize = '3.5vh';
     document.getElementById("hora").style.fontSize = '3.5vh';
     //
-//    cordova.plugins.CordovaMqTTPlugin.connect({
-//        url: 'tcp://165.227.89.32', //a public broker used for testing purposes only. Try using a self hosted broker for production.
-//        port: '1883',
-//        clientId: 'com.appVisualizadorE2',
-//        willTopicConfig: {
-//            qos: 0, //default is 0
-//            retain: false, //default is true
-//            topic: "appVisualizadorE2/prueba",
-//            payload: ""
-//        },
-//        username: "fabian",
-//        password: '1234',
-//        success: function (s) {
-//            subscribirse();
-//        },
-//        error: function (e) {
-////            console.log('error: ' + e);
-//        },
-//        onConnectionLost: function (e) {
-////            console.log('conexion perdida: ' + e);
-//        }
-//    });
+    cordova.plugins.CordovaMqTTPlugin.connect({
+        url: 'tcp://165.227.89.32', //a public broker used for testing purposes only. Try using a self hosted broker for production.
+        port: '1883',
+        clientId: 'com.appVisualizadorE2',
+        willTopicConfig: {
+            qos: 0, //default is 0
+            retain: false, //default is true
+            topic: "appVisualizadorE2/prueba",
+            payload: ""
+        },
+        username: "fabian",
+        password: '1234',
+        success: function (s) {
+            subscribirse();
+        },
+        error: function (e) {
+//            console.log('error: ' + e);
+        },
+        onConnectionLost: function (e) {
+//            console.log('conexion perdida: ' + e);
+        }
+    });
     //
     actualizarTurnos();
     actualizarArrayCiclico();
+    //
+//    let arrayP = [
+//        {h: 10, cb: 22, s: 1},
+//        {h: 3, cb: 21, s: 1},
+//        {h: 51, cb: 42, s: 1},
+//        {h: 51, cb: 47, s: 1},
+//        {h: 5, cb: 3, s: 1},
+//        {h: 10, cb: 22, s: 0},
+//        {h: 3, cb: 21, s: 0},
+//        {h: 51, cb: 42, s: 0},
+//        {h: 51, cb: 47, s: 0},
+//        {h: 5, cb: 3, s: 0}
+//    ];
+    //
+//    let controlP = 0;
+//    //
+//    setInterval(function () {
+//        //
+//        if (controlP === arrayP.length) {
+//            //
+//            controlP = 0;
+//        }
+//        //
+//        prueba(arrayP[controlP].h, arrayP[controlP].cb, arrayP[controlP].s);
+//        //
+//        controlP++;
+//    }, 10000);
 });
 
 function fechaHora() {
     //
     setInterval(function () {
         //
-        app.request.post(urlServer + 'read/fechaHora', {},
-                function (rsp) {
-                    //
-                    var data = JSON.parse(rsp);
-                    //
-                    $$('#fecha').html(data.fecha);
-                    $$('#hora').html(data.hora);
-                    $$('#fecha').css('font-weight', 'bold');
-                    $$('#hora').css('font-weight', 'bold');
-                    $$('#fecha').css('color', '#5B5B5A');
-                    $$('#hora').css('color', '#5B5B5A');
-                });
+//        app.request.post(urlServer + 'read/fechaHora', {},
+//                function (rsp) {
+//                    //
+//                    var data = JSON.parse(rsp);
+//                    //
+//                    $$('#fecha').html(data.fecha);
+//                    $$('#hora').html(data.hora);
+//                    $$('#fecha').css('font-weight', 'bold');
+//                    $$('#hora').css('font-weight', 'bold');
+//                    $$('#fecha').css('color', '#5B5B5A');
+//                    $$('#hora').css('color', '#5B5B5A');
+//                });
+        //
+        app.request({
+            url: urlServer + 'read/fechaHora',
+            data: {},
+            method: "POST",
+            beforeSend: function () {
+                //
+            },
+            success: function (rsp) {
+                //
+                var data = JSON.parse(rsp);
+                //
+                $$('#fecha').html(data.fecha);
+                $$('#hora').html(data.hora);
+                $$('#fecha').css('font-weight', 'bold');
+                $$('#hora').css('font-weight', 'bold');
+                $$('#fecha').css('color', '#5B5B5A');
+                $$('#hora').css('color', '#5B5B5A');
+            },
+            error: function (xhr, e) {
+                app.preloader.hide();
+                alert(JSON.stringify(xhr));
+//                modal = app.dialog.create({
+//                    title: 'Atención!',
+//                    text: 'Error de conexión!',
+//                    buttons: [{text: 'OK'}]
+//                }).open();
+            }
+        });
     }, 5000);
 }
 
@@ -635,6 +691,49 @@ function llamado() {
                 }
             }, errorCallback // error attaching the callback
             );
+}
+
+//
+function prueba(valor, valor2, valor3) {
+    //
+    var int = parseInt(valor);
+    var int2 = parseInt(valor2);
+    var h = '';
+    var cb = '';
+    var s = parseInt(valor3);
+    //
+    if (int > 50) {
+        //
+        h = 'II';
+    } else {
+        //
+        h = 'Hab. ' + int;
+
+    }
+    //
+    if (int2 > 20 && int2 < 41) {
+        //
+        let b = int2 - 20;
+        //
+        cb = 'Baño ' + b;
+        //
+    } else if (int2 > 40 && int2 < 46) {
+        //
+        let b = int2 - 40;
+        //
+        cb = 'Baño Hombre ' + b;
+    } else if (int2 > 45 && int2 < 51) {
+        //
+        let b = int2 - 45;
+        //
+        cb = 'Baño Mujer ' + b;
+    } else {
+        //
+        cb = 'Cama ' + int2;
+    }
+    //
+//                            guardarLlamadoR(int, int2, s);
+    actualizarArrayTurnos(h, cb, s, int, int2, s, 0);
 }
 
 //
