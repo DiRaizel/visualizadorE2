@@ -71,6 +71,7 @@ var mainView = app.views.create('.view-main');
 
 //
 var arrayT = [];
+var arrayLlamadosM = [];
 var urlServer = '';
 
 //
@@ -140,6 +141,13 @@ document.addEventListener('deviceready', function () {
     //
     actualizarTurnos();
     actualizarArrayCiclico();
+    //
+    if (localStorage.llamadosM !== undefined) {
+        //
+        arrayLlamadosM = JSON.parse(localStorage.llamadosM);
+    }
+    //
+    guardarLlamadoM();
     //
     var str = '';
     var str2 = '';
@@ -257,7 +265,7 @@ function fechaHora() {
     setInterval(function () {
         //
         app.request({
-            url: urlServer + 'read/fechaHora',
+            url: urlServer + 'Read/fechaHora',
             data: {},
             method: "POST",
             beforeSend: function () {
@@ -844,11 +852,72 @@ function guardarLlamado(valor, valor2, valor3, valor4) {
 //
 function guardarLlamadoR(valor, valor2, valor3) {
     //
-    app.request.post(urlServer + 'Create/guardarLlamadoR', {habitacion: valor, caba: valor2, estado: valor3},
-            function (rsp) {
+    app.request({
+        url: urlServer + 'Create/guardarLlamadoR',
+        data: {habitacion: valor, caba: valor2, estado: valor3},
+        method: "POST",
+        beforeSend: function () {
+            //
+        },
+        success: function (rsp) {
+            //
+        },
+        error: function (xhr, e) {
+            //
+            if (arrayLlamadosM.length > 0) {
                 //
-                console.log(rsp);
-            });
+                var cant = arrayLlamadosM.length;
+                //
+                if (cant === 500) {
+                    //
+                    arrayLlamadosM.splice(0, 1);
+                    //
+                    arrayLlamadosM[499] = {habitacion: valor, caba: valor2, estado: valor3};
+                } else {
+                    //
+                    arrayLlamadosM[cant] = {habitacion: valor, caba: valor2, estado: valor3};
+                }
+                //
+                localStorage.llamadosM = JSON.stringify(arrayLlamadosM);
+            } else {
+                //
+                arrayLlamadosM[0] = {habitacion: valor, caba: valor2, estado: valor3};
+                //
+                localStorage.llamadosM = JSON.stringify(arrayLlamadosM);
+            }
+        }
+    });
+}
+
+//
+function guardarLlamadoM() {
+    //
+    setInterval(function () {
+        //
+        if (arrayLlamadosM.length > 0) {
+            //
+            for (var i = 0; i < arrayLlamadosM.length; i++) {
+                //
+                app.request({
+                    url: urlServer + 'Create/guardarLlamadoR',
+                    data: {habitacion: arrayLlamadosM[i]['habitacion'], caba: arrayLlamadosM[i]['caba'], estado: arrayLlamadosM[i]['estado']},
+                    method: "POST",
+                    beforeSend: function () {
+                        //
+                    },
+                    success: function (rsp) {
+                        //
+                        arrayLlamadosM.splice(i, 1);
+                        //
+                        localStorage.llamadosM = JSON.stringify(arrayLlamadosM);
+                    },
+                    error: function (xhr, e) {
+                        //
+                    }
+                });
+            }
+        }
+    }, 60000);
 }
 
 //
